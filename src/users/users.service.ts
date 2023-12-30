@@ -1,48 +1,50 @@
-import { PrismaService } from 'nestjs-prisma';
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { PasswordService } from '../auth/password.service';
-import { ChangePasswordInput } from './dto/change-password.input';
-import { UpdateUserInput } from './dto/update-user.input';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdatePasswordDto } from './dto/update-password';
 
 @Injectable()
-export class UsersService {
-  constructor(
-    private prisma: PrismaService,
-    private passwordService: PasswordService,
-  ) {}
+export class UserService {
+  constructor(private readonly prisma: PrismaService) {}
 
-  updateUser(userId: string, newUserData: UpdateUserInput) {
-    return this.prisma.user.update({
-      data: newUserData,
-      where: {
-        id: userId,
+  async register(createUserDto: CreateUserDto) {
+    const { name, password } = createUserDto;
+
+    const user = await this.prisma.user.create({
+      data: {
+        name,
+        password,
+        // other fields
       },
     });
+
+    return user;
   }
 
-  async changePassword(
-    userId: string,
-    userPassword: string,
-    changePassword: ChangePasswordInput,
-  ) {
-    const passwordValid = await this.passwordService.validatePassword(
-      changePassword.oldPassword,
-      userPassword,
-    );
+  async login(createUserDto: CreateUserDto) {
+    const { name, password } = createUserDto;
 
-    if (!passwordValid) {
-      throw new BadRequestException('Invalid password');
+    const user = await this.prisma.user.findUnique({
+      where: { name },
+    });
+
+    if (!user || user.password !== password) {
+      throw new Error('Invalid username or password');
     }
 
-    const hashedPassword = await this.passwordService.hashPassword(
-      changePassword.newPassword,
-    );
+    return user;
+  }
 
-    return this.prisma.user.update({
+  async updatePassword(id: number, updatePasswordDto: UpdatePasswordDto) {
+    const { password } = updatePasswordDto;
+
+    const user = await this.prisma.user.update({
+      where: { id },
       data: {
-        password: hashedPassword,
+        password,
       },
-      where: { id: userId },
     });
+
+    return user;
   }
 }
