@@ -29,7 +29,7 @@ export class UserService {
     });
 
     if (!user || user.password !== password) {
-      throw new Error('Invalid username or password');
+      throw new Error('用户名或密码无效');
     }
 
     return user;
@@ -39,7 +39,7 @@ export class UserService {
     const { password } = updatePasswordDto;
 
     const user = await this.prisma.user.update({
-      where: { id },
+      where: { id: id },
       data: {
         password,
       },
