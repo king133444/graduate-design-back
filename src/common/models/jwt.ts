@@ -5,10 +5,10 @@ dotenv.config();
 
 export const generateTokens = (userId: number) => {
   // Generate an access token and a refresh token
-  const accessToken = sign({ id: userId }, 'JWT_ACCESS_SECRET', {
+  const accessToken = sign({ id: userId }, process.env.JWT_ACCESS_SECRET, {
     expiresIn: '15m',
   });
-  const refreshToken = sign({ id: userId }, 'JWT_REFRESH_SECRET', {
+  const refreshToken = sign({ id: userId }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: '7d',
   });
 
@@ -18,15 +18,17 @@ export const generateTokens = (userId: number) => {
 
 export const validateRefreshToken = (refreshToken: string) => {
   try {
-    const payload = verify(refreshToken, 'JWT_REFRESH_SECRET');
+    // 解码jwt，返回原数据
+    const payload = verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     return payload;
   } catch (error) {
+    console.log('error:', error);
     throw new Error('Invalid refresh token');
   }
 };
 
 export const generateNewAccessToken = (userId: number) => {
-  const newAccessToken = sign({ id: userId }, 'JWT_ACCESS_SECRET', {
+  const newAccessToken = sign({ id: userId }, process.env.JWT_ACCESS_SECRET, {
     expiresIn: '15m',
   });
   return newAccessToken;
