@@ -39,6 +39,7 @@ export class AuthService {
     }
     // Generate tokens using the jwt module
     const tokens = generateTokens(user.id);
+    delete user.password;
 
     // Return the tokens
     return { tokens, user };

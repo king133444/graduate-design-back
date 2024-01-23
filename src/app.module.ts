@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { AppResolver } from './app.resolver';
 import { AuthModule } from './auth/auth.module';
 import config from './common/configs/config';
+import { UserModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import config from './common/configs/config';
     }),
 
     AuthModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

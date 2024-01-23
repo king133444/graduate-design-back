@@ -6,10 +6,10 @@ dotenv.config();
 export const generateTokens = (userId: number) => {
   // Generate an access token and a refresh token
   const accessToken = sign({ id: userId }, process.env.JWT_ACCESS_SECRET, {
-    expiresIn: '15m',
+    expiresIn: '7m',
   });
   const refreshToken = sign({ id: userId }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: '7d',
+    expiresIn: '15min',
   });
 
   // Return the tokens
@@ -29,7 +29,7 @@ export const validateRefreshToken = (refreshToken: string) => {
 
 export const generateNewAccessToken = (userId: number) => {
   const newAccessToken = sign({ id: userId }, process.env.JWT_ACCESS_SECRET, {
-    expiresIn: '15m',
+    expiresIn: '7m',
   });
   return newAccessToken;
 };
