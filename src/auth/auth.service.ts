@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password';
 import { JwtPayload } from 'jsonwebtoken';
-
+import * as bcrypt from 'bcrypt';
 import {
   generateTokens,
   validateRefreshToken,
@@ -14,48 +14,53 @@ export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
   async register(createUserDto: CreateUserDto) {
-    const { name, password } = createUserDto;
-
-    const user = await this.prisma.user.create({
+    const { name, password, email, roleId } = createUserDto;
+    // 加密密码
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await this.prisma.user.create({
       data: {
         name,
-        password,
-        // other fields
+        password: hashedPassword,
+        email,
+        roleId: roleId,
       },
     });
-
-    return { data: { user }, success: true };
+    return { success: true };
   }
 
   async login(createUserDto: CreateUserDto) {
     const { name, password } = createUserDto;
 
-    const user = await this.prisma.user.findUnique({
-      where: { name },
+    const user = await this.prisma.user.findFirst({
+      where: {
+        name,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        roleId: true,
+        password: true,
+      },
     });
-
-    if (!user || user.password !== password) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new HttpException('用户名或密码无效', HttpStatus.BAD_REQUEST);
     }
-    // Generate tokens using the jwt module
     const tokens = generateTokens(user.id);
     delete user.password;
-
-    // Return the tokens
     return { tokens, user };
   }
 
-  async updatePassword(id: number, updatePasswordDto: UpdatePasswordDto) {
-    const { password } = updatePasswordDto;
-
-    const user = await this.prisma.user.update({
-      where: { id: id },
+  async updatePassword(updatePasswordDto: UpdatePasswordDto) {
+    const { id, password } = updatePasswordDto;
+    console.log('id', id);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await this.prisma.user.update({
+      where: { id },
       data: {
-        password,
+        password: hashedPassword,
       },
     });
-
-    return user;
   }
 
   // 刷新token

@@ -10,78 +10,111 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  password   String
-  roles      UserRole[]
-  proposals  Proposal[]
-  checks     Check[]
-  repairs    Repair[]
-}
-
 model Role {
-  id          Int          @id @default(autoincrement())
+  id    Int    @id @default(autoincrement())
+  name  String
+  users User[]
+}
+
+model User {
+  id      Int    @id @default(autoincrement())
+  name    String @unique
+  email   String @unique
+  password String
+  roleId  Int
+  role    Role   @relation(fields: [roleId], references: [id])
+  tickets TicketPurchase[]
+  comments Comment[]
+  equipmentFaultReports  EquipmentFaultReport[]
+  EquipmentRepairRecords  EquipmentRepairRecord[]
+  EquipmentPurchasePlans EquipmentPurchasePlan[]
+  EquipmentPurchaseRecords EquipmentPurchaseRecord[]
+}
+
+model Attraction {
+  id          Int    @id @default(autoincrement())
   name        String
-  users       UserRole[]
-  permissions Permission[]
+  type        String
+  description String
+  openingTime DateTime
+  closingTime DateTime
+  status      String
 }
 
-model UserRole {
-  userId Int
-  user   User   @relation(fields: [userId], references: [id])
-  roleId Int
-  role   Role   @relation(fields: [roleId], references: [id])
-  @@id([userId, roleId])
+model Ticket {
+  id          Int              @id @default(autoincrement())
+  type        String
+  price       Int
+  description String
+  validity    DateTime
+  purchases   TicketPurchase[]
 }
 
-model Permission {
-  id     Int    @id @default(autoincrement())
-  name   String
-  roleId Int
-  role   Role   @relation(fields: [roleId], references: [id])
+model Comment {
+  id      Int      @id @default(autoincrement())
+  userId  Int
+  user    User     @relation(fields: [userId], references: [id])
+  content String
+  time    DateTime @default(now())
+}
+
+model TicketPurchase {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  user     User     @relation(fields: [userId], references: [id])
+  ticketId Int
+  ticket   Ticket   @relation(fields: [ticketId], references: [id])
+  time     DateTime @default(now())
+  quantity Int
 }
 
 model Equipment {
-  id         Int         @id @default(autoincrement())
-  name       String
-  status     String
-  proposals  Proposal[]
-  checks     Check[]
-  repairs    Repair[]
-  suppliers  Supplier[]
+  id     Int     @id @default(autoincrement())
+  name   String
+  status String
+  reports EquipmentFaultReport[]
+  equipmentRepairRecords EquipmentRepairRecord[]
 }
 
-model Proposal {
+model EquipmentFaultReport {
+  id         Int      @id @default(autoincrement())
+  equipmentId Int
+  equipment  Equipment @relation(fields: [equipmentId], references: [id])
+  reporterId  Int
+  reporter   User     @relation(fields: [reporterId], references: [id])
+  reportTime DateTime @default(now())
+  description String
+  approval   String
+}
+
+model EquipmentRepairRecord {
   id          Int      @id @default(autoincrement())
   equipmentId Int
   equipment   Equipment @relation(fields: [equipmentId], references: [id])
-  userId      Int
-  user        User @relation(fields: [userId], references: [id])
-  status      String
+  repairerId  Int
+  repairer    User     @relation(fields: [repairerId], references: [id])
+  repairTime  DateTime @default(now())
+  cause       String
+  result      String
 }
 
-model Supplier {
-  id          Int        @id @default(autoincrement())
-  name        String
-  equipmentId Int
-  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+model EquipmentPurchasePlan {
+  id         Int     @id @default(autoincrement())
+  purchaserId Int
+  purchaser  User    @relation(fields: [purchaserId], references: [id])
+  submitTime DateTime @default(now())
+  content    String
+  approval   String
+  equipmentPurchaseRecords EquipmentPurchaseRecord[]
 }
 
-model Check {
+model EquipmentPurchaseRecord {
   id          Int      @id @default(autoincrement())
-  equipmentId Int
-  equipment   Equipment @relation(fields: [equipmentId], references: [id])
-  userId      Int
-  user        User @relation(fields: [userId], references: [id])
-  status      String
-}
-
-model Repair {
-  id          Int      @id @default(autoincrement())
-  equipmentId Int
-  equipment   Equipment @relation(fields: [equipmentId], references: [id])
-  userId      Int
-  user        User @relation(fields: [userId], references: [id])
-  issue       String
+  planId      Int
+  plan        EquipmentPurchasePlan @relation(fields: [planId], references: [id])
+  supplierId  Int
+  supplier    User     @relation(fields: [supplierId], references: [id])
+  purchaseTime DateTime @default(now())
+  price       Int
+  quantity    Int
 }

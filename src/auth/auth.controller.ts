@@ -6,6 +6,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  Get,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -18,6 +19,7 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('register')
+  @HttpCode(HttpStatus.OK)
   async register(@Body() createUserDto: CreateUserDto) {
     return this.auth.register(createUserDto);
   }
@@ -36,12 +38,11 @@ export class AuthController {
     return ApiResponse.success(data);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @Post('changePassword')
-  async updatePassword(
-    @Query('id') id: number,
-    @Body() updatePasswordDto: UpdatePasswordDto,
-  ) {
-    return this.auth.updatePassword(id, updatePasswordDto);
+  @HttpCode(HttpStatus.OK)
+  async updatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
+    const data = await this.auth.updatePassword(updatePasswordDto);
+    return ApiResponse.success(data);
   }
 }
